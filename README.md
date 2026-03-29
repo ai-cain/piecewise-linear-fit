@@ -25,48 +25,46 @@ flowchart LR
 
 ## Documentation
 
-Full project documentation is available in [`docs/README.md`](./docs/README.md).
+Full project documentation is available in:
+
+- [`docs/index.md`](./docs/index.md) for the main documentation home
+
+Serve the docs locally with:
+
+```bash
+pip install -r requirements-docs.txt
+python -m mkdocs serve
+```
+
+Mermaid diagrams are already enabled in the docs site through the MkDocs configuration.
 
 It covers:
 
 - architecture
+- backend file reference
+- QML file reference
 - data flow
 - segmentation algorithm
+- mathematical background
 - chart generation
 - export behavior
 - relationship with the legacy notebook
 
 ## Screenshots
 
+The most important views are shown below.
+
+For the full screenshot gallery, see [`docs/screenshots.md`](./docs/screenshots.md).
+
 ### CSV Import
 
 ![CSV Import](docs/img/01_csv_import.png)
 
-### Manual Input
-
-**Range mode**
-
-![Manual Input Range](docs/img/02_01_manual_input_range.png)
-
-**Custom points mode**
-
-![Manual Input Custom](docs/img/02_01_manual_input_custom.png)
-
-### Results
-
-**Piecewise fit chart**
+### Piecewise Fit Results
 
 ![Results Chart](docs/img/03_01_results_chart.png)
 
-**Global residual view**
-
-![Global Residual](docs/img/03_02_results_global_residual.png)
-
-**Segment error review**
-
-![Segment Error](docs/img/03_03_results_segment_error.png)
-
-**Code export**
+### Code Export
 
 ![Code Export](docs/img/03_04_code_copy.png)
 

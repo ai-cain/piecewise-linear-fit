@@ -1,0 +1,35 @@
+site_name: Segmented Linear Fit Encoder
+site_description: Technical documentation for Piecewise Linear Fit Studio
+docs_dir: docs
+site_dir: site
+theme:
+  name: readthedocs
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Architecture: architecture.md
+  - Backend Reference: backend.md
+  - QML Reference: qml.md
+  - Segmentation Algorithm: algorithm.md
+  - Mathematics: mathematics.md
+  - Code Export: export.md
+  - Screenshots: screenshots.md
+  - Legacy Notebook: notebook.md
+markdown_extensions:
+  - admonition
+  - attr_list
+  - fenced_code
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - tables
+  - toc:
+      permalink: true
+extra_javascript:
+  - assets/javascripts/mermaid.min.js
+  - assets/javascripts/mermaid-init.js
+extra_css:
+  - assets/stylesheets/extra.css
+strict: true

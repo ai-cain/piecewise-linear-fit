@@ -1,0 +1,18 @@
+.wy-nav-content {
+    max-width: 1100px;
+}
+
+img {
+    border: 1px solid #d7dce2;
+    border-radius: 8px;
+    display: block;
+    height: auto;
+    margin: 1rem 0 1.5rem;
+    max-width: 100%;
+}
+
+table code,
+p code,
+li code {
+    white-space: nowrap;
+}
