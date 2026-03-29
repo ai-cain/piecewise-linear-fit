@@ -15,6 +15,7 @@ class AppController : public QObject
     Q_PROPERTY(bool hasResults READ hasResults NOTIFY resultsChanged)
     Q_PROPERTY(int pointCount READ pointCount NOTIFY pointsChanged)
     Q_PROPERTY(int missingYCount READ missingYCount NOTIFY pointsChanged)
+    Q_PROPERTY(QVariantList pointSeries READ pointSeries NOTIFY pointsChanged)
     Q_PROPERTY(QString summaryText READ summaryText NOTIFY resultsChanged)
     Q_PROPERTY(QString plcCode READ plcCode NOTIFY resultsChanged)
     Q_PROPERTY(QVariantList segmentResults READ segmentResults NOTIFY resultsChanged)
@@ -29,6 +30,7 @@ public:
     bool hasResults() const;
     int pointCount() const;
     int missingYCount() const;
+    QVariantList pointSeries() const;
     QString summaryText() const;
     QString plcCode() const;
     QVariantList segmentResults() const;

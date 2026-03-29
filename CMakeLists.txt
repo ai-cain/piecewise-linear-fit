@@ -36,8 +36,10 @@ qt_add_qml_module(PiecewiseLinearFit
         qml/components/AppButton.qml
         qml/components/MetricTile.qml
         qml/components/NavButton.qml
-        qml/pages/HomePage.qml
-        qml/pages/DataPage.qml
+        qml/components/PointTablePanel.qml
+        qml/components/PlotPanel.qml
+        qml/pages/CsvPage.qml
+        qml/pages/ManualPage.qml
         qml/pages/ResultsPage.qml
 )
 

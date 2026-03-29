@@ -166,6 +166,26 @@ int AppController::missingYCount() const
     return missingValues;
 }
 
+QVariantList AppController::pointSeries() const
+{
+    QVariantList items;
+    const QVector<DataPoint> points = m_pointModel.points();
+    items.reserve(points.size());
+
+    for (const DataPoint &point : points) {
+        if (!point.y.has_value()) {
+            continue;
+        }
+
+        QVariantMap item;
+        item.insert(QStringLiteral("x"), point.x);
+        item.insert(QStringLiteral("y"), *point.y);
+        items.append(item);
+    }
+
+    return items;
+}
+
 QString AppController::summaryText() const
 {
     return m_summaryText;
@@ -349,6 +369,10 @@ void AppController::runAnalysis()
                         .arg(formatNumber(segment.slope), formatNumber(segment.intercept)));
         item.insert(QStringLiteral("rsquared"),
                     QStringLiteral("R^2 = %1").arg(formatNumber(segment.rSquared, 5)));
+        item.insert(QStringLiteral("xStart"), segment.xStart);
+        item.insert(QStringLiteral("xEnd"), segment.xEnd);
+        item.insert(QStringLiteral("slopeValue"), segment.slope);
+        item.insert(QStringLiteral("interceptValue"), segment.intercept);
         segmentItems.append(item);
     }
 

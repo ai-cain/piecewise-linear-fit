@@ -11,7 +11,7 @@ ApplicationWindow {
     id: window
     width: 1480
     height: 920
-    minimumWidth: 1180
+    minimumWidth: 1220
     minimumHeight: 760
     visible: true
     visibility: Window.Maximized
@@ -19,96 +19,6 @@ ApplicationWindow {
 
     property int currentPage: 0
     readonly property var controller: appController
-
-    menuBar: MenuBar {
-        Menu {
-            title: "&File"
-
-            MenuItem {
-                text: "Open CSV..."
-                onTriggered: window.openCsvDialog()
-            }
-
-            MenuSeparator { }
-
-            MenuItem {
-                text: "Clear points"
-                enabled: window.controller.hasPoints
-                onTriggered: window.controller.clearPoints()
-            }
-
-            MenuSeparator { }
-
-            MenuItem {
-                text: "Exit"
-                onTriggered: Qt.quit()
-            }
-        }
-
-        Menu {
-            title: "&Navigate"
-
-            MenuItem {
-                text: "Home"
-                onTriggered: window.currentPage = 0
-            }
-
-            MenuItem {
-                text: "Data"
-                onTriggered: window.currentPage = 1
-            }
-
-            MenuItem {
-                text: "Results"
-                onTriggered: window.currentPage = 2
-            }
-        }
-
-        Menu {
-            title: "&Actions"
-
-            Menu {
-                title: "Generate sample range"
-
-                MenuItem {
-                    text: "0 to 300 in 6 intervals"
-                    onTriggered: {
-                        window.controller.generatePoints(0, 300, 6)
-                        window.currentPage = 1
-                    }
-                }
-
-                MenuItem {
-                    text: "0 to 100 in 10 intervals"
-                    onTriggered: {
-                        window.controller.generatePoints(0, 100, 10)
-                        window.currentPage = 1
-                    }
-                }
-            }
-
-            MenuSeparator { }
-
-            MenuItem {
-                text: "Run analysis"
-                enabled: window.controller.hasPoints
-                onTriggered: {
-                    window.controller.runAnalysis()
-                    if (window.controller.hasResults)
-                        window.currentPage = 2
-                }
-            }
-        }
-
-        Menu {
-            title: "&Help"
-
-            MenuItem {
-                text: "About piecewise-linear-fit"
-                onTriggered: aboutDialog.open()
-            }
-        }
-    }
 
     QtObject {
         id: theme
@@ -132,20 +42,12 @@ ApplicationWindow {
         csvDialog.open()
     }
 
-    function statusColor(tone) {
-        if (tone === "success")
-            return theme.success
-        if (tone === "error")
-            return theme.accentSoft
-        return theme.info
-    }
-
     function pageTitle(index) {
         switch (index) {
         case 0:
-            return "Home"
+            return "CSV Import"
         case 1:
-            return "Data"
+            return "Manual Input"
         case 2:
             return "Results"
         default:
@@ -156,11 +58,11 @@ ApplicationWindow {
     function pageDescription(index) {
         switch (index) {
         case 0:
-            return "Workflow overview, quick actions, and current application status."
+            return "Load measured points from a CSV file."
         case 1:
-            return "Load a CSV or generate a manual range, fill in Y values, and prepare the analysis."
+            return "Generate a range manually and fill in Y values."
         case 2:
-            return "Review the computed segments, the summary, and the final PLC block."
+            return "Inspect the piecewise fit, chart, and PLC output."
         default:
             return ""
         }
@@ -171,30 +73,6 @@ ApplicationWindow {
         title: "Select a CSV file"
         nameFilters: ["CSV (*.csv)", "Text (*.txt)", "All files (*)"]
         onAccepted: window.controller.loadCsv(selectedFile)
-    }
-
-    Dialog {
-        id: aboutDialog
-        title: "About piecewise-linear-fit"
-        modal: true
-        standardButtons: Dialog.Ok
-        anchors.centerIn: parent
-        width: 440
-
-        contentItem: Label {
-            width: parent.width
-            wrapMode: Text.WordWrap
-            text: "piecewise-linear-fit is a Qt 6 + C++ desktop tool for loading measured points, running piecewise linear analysis, and generating PLC-friendly output."
-            color: theme.textPrimary
-            padding: 16
-        }
-
-        background: Rectangle {
-            radius: 18
-            color: theme.panel
-            border.width: 1
-            border.color: theme.border
-        }
     }
 
     background: Rectangle {
@@ -267,27 +145,24 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                         color: theme.textSecondary
-                        text: "C++/Qt desktop app for turning raw points into a piecewise linear function."
+                        text: "Load points, run a piecewise fit, and inspect the final output."
                     }
                 }
 
                 Rectangle {
-                    id: navigationCard
                     Layout.fillWidth: true
-                    implicitHeight: navigationContent.implicitHeight + 28
                     radius: 18
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     ColumnLayout {
-                        id: navigationContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 8
 
                         Label {
-                            text: "Navigation"
+                            text: "Pages"
                             color: theme.textPrimary
                             font.bold: true
                         }
@@ -295,8 +170,8 @@ ApplicationWindow {
                         NavButton {
                             Layout.fillWidth: true
                             theme: theme
-                            text: "Home"
-                            subtitle: "Overview and quick start"
+                            text: "CSV Import"
+                            subtitle: "Load measured points"
                             selected: window.currentPage === 0
                             onClicked: window.currentPage = 0
                         }
@@ -304,8 +179,8 @@ ApplicationWindow {
                         NavButton {
                             Layout.fillWidth: true
                             theme: theme
-                            text: "Data"
-                            subtitle: "CSV, range, and table"
+                            text: "Manual Input"
+                            subtitle: "Generate and edit points"
                             selected: window.currentPage === 1
                             onClicked: window.currentPage = 1
                         }
@@ -314,7 +189,7 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             theme: theme
                             text: "Results"
-                            subtitle: "Segments and PLC"
+                            subtitle: "Chart and PLC output"
                             selected: window.currentPage === 2
                             onClicked: window.currentPage = 2
                         }
@@ -322,22 +197,19 @@ ApplicationWindow {
                 }
 
                 Rectangle {
-                    id: actionsCard
                     Layout.fillWidth: true
-                    implicitHeight: actionsContent.implicitHeight + 28
                     radius: 18
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     ColumnLayout {
-                        id: actionsContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 10
 
                         Label {
-                            text: "Quick actions"
+                            text: "Actions"
                             color: theme.textPrimary
                             font.bold: true
                         }
@@ -366,91 +238,29 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             theme: theme
                             primary: false
-                            text: "Generate sample"
-                            onClicked: {
-                                window.controller.generatePoints(0, 300, 6)
-                                window.currentPage = 1
-                            }
+                            text: "Clear points"
+                            enabled: window.controller.hasPoints
+                            onClicked: window.controller.clearPoints()
                         }
                     }
                 }
 
-                Rectangle {
-                    id: pageSelectorCard
+                MetricTile {
                     Layout.fillWidth: true
-                    implicitHeight: pageSelectorContent.implicitHeight + 28
-                    radius: 18
-                    color: theme.panelAlt
-                    border.width: 1
-                    border.color: theme.border
-
-                    ColumnLayout {
-                        id: pageSelectorContent
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 10
-
-                        Label {
-                            text: "Page selector"
-                            color: theme.textPrimary
-                            font.bold: true
-                        }
-
-                        ComboBox {
-                            id: pageSelector
-                            Layout.fillWidth: true
-                            model: ["Home", "Data", "Results"]
-                            currentIndex: window.currentPage
-                            onActivated: window.currentPage = currentIndex
-
-                            contentItem: Text {
-                                leftPadding: 12
-                                rightPadding: 36
-                                text: pageSelector.displayText
-                                font.pixelSize: 14
-                                color: theme.textPrimary
-                                verticalAlignment: Text.AlignVCenter
-                            }
-
-                            background: Rectangle {
-                                radius: 12
-                                color: theme.field
-                                border.width: 1
-                                border.color: theme.fieldBorder
-                            }
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: theme
-                            primary: false
-                            text: "Go to data"
-                            onClicked: window.currentPage = 1
-                        }
-                    }
+                    theme: theme
+                    label: "Points"
+                    value: String(window.controller.pointCount)
+                    note: window.controller.hasPoints ? "available in the table" : "no dataset loaded"
+                    accentColor: theme.accent
                 }
 
-                ColumnLayout {
+                MetricTile {
                     Layout.fillWidth: true
-                    spacing: 10
-
-                    MetricTile {
-                        Layout.fillWidth: true
-                        theme: theme
-                        label: "Points"
-                        value: String(window.controller.pointCount)
-                        note: window.controller.hasPoints ? "loaded" : "no data"
-                        accentColor: theme.accent
-                    }
-
-                    MetricTile {
-                        Layout.fillWidth: true
-                        theme: theme
-                        label: "Missing Y"
-                        value: String(window.controller.missingYCount)
-                        note: "still to fill"
-                        accentColor: theme.info
-                    }
+                    theme: theme
+                    label: "Missing Y"
+                    value: String(window.controller.missingYCount)
+                    note: "values still to fill"
+                    accentColor: theme.info
                 }
 
                 Item {
@@ -458,36 +268,21 @@ ApplicationWindow {
                 }
 
                 Rectangle {
-                    id: statusCard
                     Layout.fillWidth: true
-                    implicitHeight: statusContent.implicitHeight + 28
                     radius: 18
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     ColumnLayout {
-                        id: statusContent
                         anchors.fill: parent
                         anchors.margins: 14
-                        spacing: 10
+                        spacing: 8
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-
-                            Rectangle {
-                                Layout.preferredWidth: 10
-                                Layout.preferredHeight: 10
-                                radius: 5
-                                color: window.statusColor(window.controller.statusTone)
-                            }
-
-                            Label {
-                                text: "Current status"
-                                color: theme.textPrimary
-                                font.bold: true
-                            }
+                        Label {
+                            text: "Status"
+                            color: theme.textPrimary
+                            font.bold: true
                         }
 
                         Label {
@@ -496,7 +291,7 @@ ApplicationWindow {
                             color: theme.textSecondary
                             text: window.controller.statusMessage.length > 0
                                   ? window.controller.statusMessage
-                                  : "The app is ready to work with CSV or manual mode."
+                                  : "Ready."
                         }
                     }
                 }
@@ -518,7 +313,7 @@ ApplicationWindow {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 106
+                    Layout.preferredHeight: 110
                     radius: 22
                     color: theme.panelAlt
                     border.width: 1
@@ -549,7 +344,7 @@ ApplicationWindow {
                         }
 
                         Rectangle {
-                            Layout.preferredWidth: 320
+                            Layout.preferredWidth: 300
                             Layout.fillHeight: true
                             radius: 18
                             color: theme.field
@@ -562,42 +357,27 @@ ApplicationWindow {
                                 spacing: 6
 
                                 Label {
-                                    text: "Quick navigation"
+                                    text: "Current dataset"
                                     color: theme.textMuted
                                     font.pixelSize: 12
                                     font.bold: true
                                     font.capitalization: Font.AllUppercase
                                 }
 
-                                ComboBox {
-                                    id: headerPageSelector
+                                Label {
                                     Layout.fillWidth: true
-                                    model: ["Home", "Data", "Results"]
-                                    currentIndex: window.currentPage
-                                    onActivated: window.currentPage = currentIndex
-
-                                    contentItem: Text {
-                                        leftPadding: 12
-                                        rightPadding: 36
-                                        text: headerPageSelector.displayText
-                                        font.pixelSize: 14
-                                        color: theme.textPrimary
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-
-                                    background: Rectangle {
-                                        radius: 12
-                                        color: theme.panel
-                                        border.width: 1
-                                        border.color: theme.fieldBorder
-                                    }
+                                    wrapMode: Text.WordWrap
+                                    color: theme.textPrimary
+                                    text: window.controller.pointCount + " points loaded"
+                                    font.pixelSize: 20
+                                    font.bold: true
                                 }
 
                                 Label {
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
                                     color: theme.textSecondary
-                                    text: "Use the menu bar, the selector, or the sidebar to move through the workflow."
+                                    text: window.controller.missingYCount + " Y values still missing"
                                 }
                             }
                         }
@@ -609,18 +389,17 @@ ApplicationWindow {
                     Layout.fillHeight: true
                     currentIndex: window.currentPage
 
-                    HomePage {
+                    CsvPage {
                         theme: theme
                         controller: window.controller
                         navigateToPage: function(index) { window.currentPage = index }
                         openCsvDialog: function() { window.openCsvDialog() }
                     }
 
-                    DataPage {
+                    ManualPage {
                         theme: theme
                         controller: window.controller
                         navigateToPage: function(index) { window.currentPage = index }
-                        openCsvDialog: function() { window.openCsvDialog() }
                     }
 
                     ResultsPage {
