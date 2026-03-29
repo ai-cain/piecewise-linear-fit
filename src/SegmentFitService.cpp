@@ -134,13 +134,15 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
     }
     result.absoluteTolerance = options.fitTolerancePercent * maxAbsY / 100.0;
 
-    QVector<int> segmentLengths;
+    QVector<int> segmentCounts;
+    QVector<int> segmentAdvances;
     int cursor = 0;
 
     while (cursor < points.size()) {
         const int remaining = points.size() - cursor;
         if (remaining <= minimumPoints) {
-            segmentLengths.append(remaining);
+            segmentCounts.append(remaining);
+            segmentAdvances.append(std::max(1, remaining - 1));
             break;
         }
 
@@ -170,7 +172,8 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
         }
 
         if (candidateCounts.isEmpty()) {
-            segmentLengths.append(remaining);
+            segmentCounts.append(remaining);
+            segmentAdvances.append(std::max(1, remaining - 1));
             break;
         }
 
@@ -195,21 +198,27 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
             ++chosenCount;
         }
 
-        segmentLengths.append(chosenCount);
-        cursor += chosenCount;
+        segmentCounts.append(chosenCount);
+        segmentAdvances.append(std::max(1, chosenCount - 1));
+        cursor += std::max(1, chosenCount - 1);
     }
 
-    if (segmentLengths.size() > 1 && segmentLengths.last() < 2) {
-        segmentLengths[segmentLengths.size() - 2] += segmentLengths.takeLast();
+    if (segmentCounts.size() > 1 && segmentCounts.last() < 2) {
+        segmentCounts[segmentCounts.size() - 2] += segmentCounts.last();
+        segmentCounts.removeLast();
+        segmentAdvances.removeLast();
     }
 
-    cursor = 0;
-    for (const int count : std::as_const(segmentLengths)) {
-        if (count < 2 || cursor + count > points.size()) {
+    int startIndex = 0;
+    for (int segmentIndex = 0; segmentIndex < segmentCounts.size(); ++segmentIndex) {
+        const int count = segmentCounts.at(segmentIndex);
+        const int lastPointIndex = static_cast<int>(points.size()) - 1;
+        const int endIndex = std::min(startIndex + count - 1, lastPointIndex);
+        if (count < 2 || startIndex >= points.size() || endIndex <= startIndex) {
             continue;
         }
 
-        const RegressionResult regression = linearRegression(points, cursor, count);
+        const RegressionResult regression = linearRegression(points, startIndex, endIndex - startIndex + 1);
         if (!regression.valid) {
             result.errorMessage = QStringLiteral("Could not compute a valid regression for one of the segments.");
             result.segments.clear();
@@ -217,8 +226,8 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
         }
 
         SegmentResult segment;
-        segment.startIndex = cursor;
-        segment.endIndex = cursor + count - 1;
+        segment.startIndex = startIndex;
+        segment.endIndex = endIndex;
         segment.xStart = points.at(segment.startIndex).x;
         segment.xEnd = points.at(segment.endIndex).x;
         segment.slope = regression.slope;
@@ -226,7 +235,9 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
         segment.rSquared = regression.rSquared;
         result.segments.append(segment);
 
-        cursor += count;
+        if (segmentIndex < segmentAdvances.size() - 1) {
+            startIndex += segmentAdvances.at(segmentIndex);
+        }
     }
 
     if (result.segments.isEmpty()) {
