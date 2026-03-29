@@ -1,2 +1,0 @@
-module MyPalette
-singleton ColorPalette 1.0 colorPalette.qml
