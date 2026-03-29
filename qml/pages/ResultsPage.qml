@@ -239,7 +239,7 @@ Item {
                                 model: controller.exportTargets
                                 enabled: controller.hasResults
                                 currentIndex: Math.max(0, controller.exportTargets.indexOf(controller.exportTarget))
-                                onActivated: controller.setExportTarget(currentText)
+                                onActivated: controller.exportTarget = currentText
 
                                 contentItem: Text {
                                     leftPadding: 12
@@ -337,23 +337,38 @@ Item {
                             text: "Generated from the computed piecewise segments for " + controller.exportTarget + "."
                         }
 
-                        TextArea {
+                        ScrollView {
+                            id: codeScroll
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            readOnly: true
-                            wrapMode: TextArea.WrapAnywhere
-                            text: controller.exportCode
-                            color: theme.textPrimary
-                            font.family: "Consolas"
-                            font.pixelSize: 13
-                            selectionColor: theme.accent
-                            selectedTextColor: theme.bg
+                            clip: true
 
                             background: Rectangle {
                                 radius: 18
                                 color: theme.field
                                 border.width: 1
                                 border.color: theme.fieldBorder
+                            }
+
+                            ScrollBar.horizontal: ScrollBar { }
+                            ScrollBar.vertical: ScrollBar { }
+
+                            TextArea {
+                                id: exportCodeArea
+                                readOnly: true
+                                selectByMouse: true
+                                wrapMode: TextArea.NoWrap
+                                text: controller.exportCode
+                                color: theme.textPrimary
+                                font.family: "Consolas"
+                                font.pixelSize: 13
+                                selectionColor: theme.accent
+                                selectedTextColor: theme.bg
+                                padding: 16
+                                width: Math.max(codeScroll.availableWidth, contentWidth + leftPadding + rightPadding)
+                                height: Math.max(codeScroll.availableHeight, contentHeight + topPadding + bottomPadding)
+
+                                background: null
                             }
                         }
                     }

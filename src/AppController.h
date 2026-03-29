@@ -27,7 +27,7 @@ class AppController : public QObject
     Q_PROPERTY(double reviewTolerance READ reviewTolerance NOTIFY resultsChanged)
     Q_PROPERTY(QStringList exportTargets READ exportTargets CONSTANT)
     Q_PROPERTY(QString exportTarget READ exportTarget WRITE setExportTarget NOTIFY exportTargetChanged)
-    Q_PROPERTY(QString exportCode READ exportCode NOTIFY resultsChanged NOTIFY exportTargetChanged)
+    Q_PROPERTY(QString exportCode READ exportCode NOTIFY exportCodeChanged)
     Q_PROPERTY(QString summaryText READ summaryText NOTIFY resultsChanged)
     Q_PROPERTY(QString plcCode READ plcCode NOTIFY resultsChanged)
     Q_PROPERTY(QVariantList segmentResults READ segmentResults NOTIFY resultsChanged)
@@ -70,6 +70,7 @@ signals:
     void pointsChanged();
     void resultsChanged();
     void exportTargetChanged();
+    void exportCodeChanged();
 
 private:
     void setStatus(const QString &message, const QString &tone);

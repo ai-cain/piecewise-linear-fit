@@ -475,6 +475,7 @@ void AppController::setExportTarget(const QString &target)
 
     m_exportTarget = normalized;
     emit exportTargetChanged();
+    emit exportCodeChanged();
 }
 
 QString AppController::exportCode() const
@@ -692,6 +693,7 @@ void AppController::runAnalysis()
                         .arg(result.segments.size())
                         .arg(formatNumber(result.absoluteTolerance, 6));
 
+    emit exportCodeChanged();
     emit resultsChanged();
     setStatus(QStringLiteral("Analysis completed with %1 segments.").arg(result.segments.size()),
               QStringLiteral("success"));
@@ -762,6 +764,7 @@ void AppController::invalidateResults()
     m_segments.clear();
 
     if (hadResults) {
+        emit exportCodeChanged();
         emit resultsChanged();
     }
 }
