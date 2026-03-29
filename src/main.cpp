@@ -8,7 +8,7 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    app.setApplicationName(QStringLiteral("SegmentedLinearFit"));
+    app.setApplicationName(QStringLiteral("piecewise-linear-fit"));
     app.setOrganizationName(QStringLiteral("SMARTECH"));
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    engine.loadFromModule(QStringLiteral("SegmentedLinearFit"), QStringLiteral("Main"));
+    engine.loadFromModule(QStringLiteral("PiecewiseLinearFit"), QStringLiteral("Main"));
 
     return app.exec();
 }

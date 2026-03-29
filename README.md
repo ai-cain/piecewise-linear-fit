@@ -1,37 +1,43 @@
-# SegmentedLinearFit
+# piecewise-linear-fit
 
-Aplicacion desktop en Qt 6 + C++ para construir un ajuste lineal por tramos a partir de:
+Qt 6 + C++ desktop application for building a piecewise linear approximation from:
 
-- un CSV con columnas `X` y `Y`
-- o un rango manual `min / max / intervalos` para generar puntos equiespaciados
+- a CSV file with `X` and `Y` columns
+- or a manual `min / max / intervals` range that generates evenly spaced points
 
-La app permite:
+The app currently supports:
 
-- cargar puntos desde CSV
-- generar puntos manuales
-- editar los valores `Y`
-- calcular rectas por tramos
-- ver ecuaciones finales
-- generar codigo PLC tipo `IF / ELSIF`
+- multi-page navigation with `Home`, `Data`, and `Results`
+- CSV point loading
+- manual point generation
+- editable `Y` values
+- piecewise linear analysis
+- final segment equations
+- PLC-style `IF / ELSIF` code generation
 
-## Build en Windows con Qt
+## Open In Qt Creator
+
+Open `CMakeLists.txt`, not `.pro` or `.pyproject`.
+
+## Build On Windows With Qt
 
 ```powershell
 C:\Qt\6.10.2\llvm-mingw_64\bin\qt-cmake.bat -S . -B build-cpp-qt -G Ninja -DCMAKE_MAKE_PROGRAM=C:/Qt/Tools/Ninja/ninja.exe -DCMAKE_CXX_COMPILER=C:/Qt/Tools/llvm-mingw1706_64/bin/clang++.exe
 C:\Qt\Tools\Ninja\ninja.exe -C build-cpp-qt
+C:\Qt\6.10.2\llvm-mingw_64\bin\windeployqt.exe --qmldir qml build-cpp-qt\piecewise-linear-fit.exe
 ```
 
-Ejecutable esperado:
+Expected executable:
 
-- `build-cpp-qt/SegmentedLinearFit.exe`
+- `build-cpp-qt/piecewise-linear-fit.exe`
 
-## Estructura nueva
+## Project Structure
 
-- `src/`: backend C++
-- `qml/`: interfaz Qt Quick
-- `files/`: notebooks y datos de referencia
-- `docs/`: documentacion del notebook original
+- `src/`: C++ backend
+- `qml/`: Qt Quick interface
+- `files/`: reference notebook and sample data
+- `docs/`: documentation for the original notebook workflow
 
-## Nota
+## Note
 
-La version C++ ya es la ruta principal del proyecto. Los archivos Python originales siguen en el repo como referencia de migracion.
+The C++ version is now the main application path. The original notebook is still kept in `files/segmented_linear_fit.ipynb` together with sample CSV files.

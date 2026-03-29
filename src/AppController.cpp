@@ -348,7 +348,7 @@ void AppController::runAnalysis()
                     QStringLiteral("OUT = %1 * IN + %2")
                         .arg(formatNumber(segment.slope), formatNumber(segment.intercept)));
         item.insert(QStringLiteral("rsquared"),
-                    QStringLiteral("R² = %1").arg(formatNumber(segment.rSquared, 5)));
+                    QStringLiteral("R^2 = %1").arg(formatNumber(segment.rSquared, 5)));
         segmentItems.append(item);
     }
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(SegmentedLinearFit LANGUAGES CXX)
+project(PiecewiseLinearFit LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,16 +11,16 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
 qt_standard_project_setup(REQUIRES 6.5)
 qt_policy(SET QTP0004 NEW)
 
-qt_add_executable(SegmentedLinearFit
+qt_add_executable(PiecewiseLinearFit
     src/main.cpp
     src/AppController.cpp
     src/PointTableModel.cpp
     src/SegmentFitService.cpp
 )
 
-target_include_directories(SegmentedLinearFit PRIVATE src)
+target_include_directories(PiecewiseLinearFit PRIVATE src)
 
-target_link_libraries(SegmentedLinearFit
+target_link_libraries(PiecewiseLinearFit
     PRIVATE
         Qt6::Core
         Qt6::Gui
@@ -28,19 +28,26 @@ target_link_libraries(SegmentedLinearFit
         Qt6::QuickControls2
 )
 
-qt_add_qml_module(SegmentedLinearFit
-    URI SegmentedLinearFit
+qt_add_qml_module(PiecewiseLinearFit
+    URI PiecewiseLinearFit
     VERSION 1.0
     QML_FILES
         qml/Main.qml
+        qml/components/AppButton.qml
+        qml/components/MetricTile.qml
+        qml/components/NavButton.qml
+        qml/pages/HomePage.qml
+        qml/pages/DataPage.qml
+        qml/pages/ResultsPage.qml
 )
 
-set_target_properties(SegmentedLinearFit PROPERTIES
+set_target_properties(PiecewiseLinearFit PROPERTIES
+    OUTPUT_NAME "piecewise-linear-fit"
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
 
-install(TARGETS SegmentedLinearFit
+install(TARGETS PiecewiseLinearFit
     BUNDLE DESTINATION .
     RUNTIME DESTINATION bin
 )
