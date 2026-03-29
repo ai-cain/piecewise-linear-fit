@@ -16,6 +16,12 @@ class AppController : public QObject
     Q_PROPERTY(int pointCount READ pointCount NOTIFY pointsChanged)
     Q_PROPERTY(int missingYCount READ missingYCount NOTIFY pointsChanged)
     Q_PROPERTY(QVariantList pointSeries READ pointSeries NOTIFY pointsChanged)
+    Q_PROPERTY(QVariantList segmentedPointSeries READ segmentedPointSeries NOTIFY resultsChanged)
+    Q_PROPERTY(QVariantList fittedLineSeries READ fittedLineSeries NOTIFY resultsChanged)
+    Q_PROPERTY(QVariantList globalResidualSeries READ globalResidualSeries NOTIFY resultsChanged)
+    Q_PROPERTY(QVariantList segmentResidualSeries READ segmentResidualSeries NOTIFY resultsChanged)
+    Q_PROPERTY(QVariantList segmentErrorOutlierSeries READ segmentErrorOutlierSeries NOTIFY resultsChanged)
+    Q_PROPERTY(double reviewTolerance READ reviewTolerance NOTIFY resultsChanged)
     Q_PROPERTY(QString summaryText READ summaryText NOTIFY resultsChanged)
     Q_PROPERTY(QString plcCode READ plcCode NOTIFY resultsChanged)
     Q_PROPERTY(QVariantList segmentResults READ segmentResults NOTIFY resultsChanged)
@@ -31,6 +37,12 @@ public:
     int pointCount() const;
     int missingYCount() const;
     QVariantList pointSeries() const;
+    QVariantList segmentedPointSeries() const;
+    QVariantList fittedLineSeries() const;
+    QVariantList globalResidualSeries() const;
+    QVariantList segmentResidualSeries() const;
+    QVariantList segmentErrorOutlierSeries() const;
+    double reviewTolerance() const;
     QString summaryText() const;
     QString plcCode() const;
     QVariantList segmentResults() const;
@@ -56,5 +68,11 @@ private:
     QString m_statusTone = QStringLiteral("neutral");
     QString m_summaryText;
     QString m_plcCode;
+    QVariantList m_segmentedPointSeries;
+    QVariantList m_fittedLineSeries;
+    QVariantList m_globalResidualSeries;
+    QVariantList m_segmentResidualSeries;
+    QVariantList m_segmentErrorOutlierSeries;
     QVariantList m_segmentResults;
+    double m_reviewTolerance = 0.0;
 };

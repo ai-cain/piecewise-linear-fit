@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QStringList>
 #include <QRegularExpression>
 #include <QTextStream>
 #include <QUrl>
@@ -109,6 +110,237 @@ QString normalizePath(const QString &source)
 
     return source;
 }
+
+QString segmentColor(int index)
+{
+    static const QStringList palette = {
+        QStringLiteral("#f97316"),
+        QStringLiteral("#38bdf8"),
+        QStringLiteral("#22c55e"),
+        QStringLiteral("#f43f5e"),
+        QStringLiteral("#eab308"),
+        QStringLiteral("#a78bfa"),
+        QStringLiteral("#14b8a6"),
+        QStringLiteral("#fb7185")
+    };
+
+    return palette.at(index % palette.size());
+}
+
+QVariantMap buildPointItem(double x, double y, const QString &label = QString())
+{
+    QVariantMap item;
+    item.insert(QStringLiteral("x"), x);
+    item.insert(QStringLiteral("y"), y);
+    if (!label.isEmpty()) {
+        item.insert(QStringLiteral("label"), label);
+    }
+
+    return item;
+}
+
+QVariantMap buildSeriesItem(const QString &name,
+                            const QString &color,
+                            const QVariantList &points,
+                            bool drawLine,
+                            bool drawMarkers,
+                            double lineWidth = 2.0,
+                            int markerSize = 4,
+                            bool showInLegend = true)
+{
+    QVariantMap series;
+    series.insert(QStringLiteral("name"), name);
+    series.insert(QStringLiteral("color"), color);
+    series.insert(QStringLiteral("points"), points);
+    series.insert(QStringLiteral("line"), drawLine);
+    series.insert(QStringLiteral("markers"), drawMarkers);
+    series.insert(QStringLiteral("lineWidth"), lineWidth);
+    series.insert(QStringLiteral("markerSize"), markerSize);
+    series.insert(QStringLiteral("showInLegend"), showInLegend);
+    return series;
+}
+
+double maxAbsYValue(const QVector<DataPoint> &points)
+{
+    double maxAbsY = 0.0;
+    for (const DataPoint &point : points) {
+        if (point.y.has_value()) {
+            maxAbsY = std::max(maxAbsY, std::abs(*point.y));
+        }
+    }
+
+    return maxAbsY;
+}
+
+QVariantList buildSegmentedPointSeries(const QVector<DataPoint> &points, const QVariantList &segmentResults)
+{
+    QVariantList seriesItems;
+    seriesItems.reserve(segmentResults.size());
+
+    for (int index = 0; index < segmentResults.size(); ++index) {
+        const QVariantMap segment = segmentResults.at(index).toMap();
+        const int startIndex = segment.value(QStringLiteral("startIndex")).toInt();
+        const int endIndex = segment.value(QStringLiteral("endIndex")).toInt();
+        QVariantList pointItems;
+
+        for (int pointIndex = startIndex; pointIndex <= endIndex && pointIndex < points.size(); ++pointIndex) {
+            const DataPoint &point = points.at(pointIndex);
+            if (!point.y.has_value()) {
+                continue;
+            }
+
+            pointItems.append(buildPointItem(point.x, *point.y));
+        }
+
+        seriesItems.append(buildSeriesItem(QStringLiteral("Segment %1").arg(index + 1),
+                                           segmentColor(index),
+                                           pointItems,
+                                           true,
+                                           true,
+                                           2.0,
+                                           4,
+                                           true));
+    }
+
+    return seriesItems;
+}
+
+QVariantList buildFittedLineSeries(const QVariantList &segmentResults)
+{
+    QVariantList seriesItems;
+    seriesItems.reserve(segmentResults.size());
+
+    for (int index = 0; index < segmentResults.size(); ++index) {
+        const QVariantMap segment = segmentResults.at(index).toMap();
+        const double xStart = segment.value(QStringLiteral("xStart")).toDouble();
+        const double xEnd = segment.value(QStringLiteral("xEnd")).toDouble();
+        const double slope = segment.value(QStringLiteral("slopeValue")).toDouble();
+        const double intercept = segment.value(QStringLiteral("interceptValue")).toDouble();
+        QVariantList pointItems;
+        pointItems.append(buildPointItem(xStart, slope * xStart + intercept));
+        pointItems.append(buildPointItem(xEnd, slope * xEnd + intercept));
+
+        seriesItems.append(buildSeriesItem(QStringLiteral("Fit %1").arg(index + 1),
+                                           segmentColor(index),
+                                           pointItems,
+                                           true,
+                                           false,
+                                           3.0,
+                                           0,
+                                           true));
+    }
+
+    return seriesItems;
+}
+
+QVariantList buildGlobalResidualSeries(const QVector<DataPoint> &points)
+{
+    QVariantList seriesItems;
+    if (points.size() < 2) {
+        return seriesItems;
+    }
+
+    int anchorIndex = points.size() > 2 ? 1 : 0;
+    const int lastIndex = points.size() - 1;
+    double denominator = points.at(anchorIndex).x - points.at(lastIndex).x;
+    if (std::abs(denominator) < 1e-12 && anchorIndex != 0) {
+        anchorIndex = 0;
+        denominator = points.at(anchorIndex).x - points.at(lastIndex).x;
+    }
+
+    if (std::abs(denominator) < 1e-12 || !points.at(anchorIndex).y.has_value() || !points.at(lastIndex).y.has_value()) {
+        return seriesItems;
+    }
+
+    const double slope = (*points.at(anchorIndex).y - *points.at(lastIndex).y) / denominator;
+    const double intercept = *points.at(anchorIndex).y - slope * points.at(anchorIndex).x;
+    QVariantList pointItems;
+    pointItems.reserve(points.size());
+
+    for (const DataPoint &point : points) {
+        if (!point.y.has_value()) {
+            continue;
+        }
+
+        const double residual = *point.y - (slope * point.x + intercept);
+        pointItems.append(buildPointItem(point.x, residual));
+    }
+
+    seriesItems.append(buildSeriesItem(QStringLiteral("Global residual"),
+                                       QStringLiteral("#ef4444"),
+                                       pointItems,
+                                       false,
+                                       true,
+                                       0.0,
+                                       4,
+                                       false));
+    return seriesItems;
+}
+
+QVariantList buildSegmentResidualSeries(const QVector<DataPoint> &points,
+                                        const QVariantList &segmentResults,
+                                        QVariantList *outlierSeriesItems,
+                                        double maxAbsY)
+{
+    QVariantList seriesItems;
+    QVariantList outlierPoints;
+    seriesItems.reserve(segmentResults.size());
+
+    for (int index = 0; index < segmentResults.size(); ++index) {
+        const QVariantMap segment = segmentResults.at(index).toMap();
+        const int startIndex = segment.value(QStringLiteral("startIndex")).toInt();
+        const int endIndex = segment.value(QStringLiteral("endIndex")).toInt();
+        const double slope = segment.value(QStringLiteral("slopeValue")).toDouble();
+        const double intercept = segment.value(QStringLiteral("interceptValue")).toDouble();
+        QVariantList pointItems;
+
+        for (int pointIndex = startIndex; pointIndex <= endIndex && pointIndex < points.size(); ++pointIndex) {
+            const DataPoint &point = points.at(pointIndex);
+            if (!point.y.has_value()) {
+                continue;
+            }
+
+            const double predicted = slope * point.x + intercept;
+            const double residual = *point.y - predicted;
+            pointItems.append(buildPointItem(point.x, residual));
+
+            double errorPercent = -0.1;
+            if (*point.y > 0.0 && maxAbsY > 1e-12) {
+                errorPercent = 100.0 * std::abs(residual) / maxAbsY;
+            }
+
+            if (errorPercent > 0.1) {
+                outlierPoints.append(buildPointItem(point.x,
+                                                    residual,
+                                                    QStringLiteral("(%1, %2)")
+                                                        .arg(formatNumber(point.x, 2),
+                                                             formatNumber(*point.y, 2))));
+            }
+        }
+
+        seriesItems.append(buildSeriesItem(QStringLiteral("Segment %1").arg(index + 1),
+                                           segmentColor(index),
+                                           pointItems,
+                                           true,
+                                           true,
+                                           2.0,
+                                           3,
+                                           true));
+    }
+
+    if (outlierSeriesItems && !outlierPoints.isEmpty()) {
+        outlierSeriesItems->append(buildSeriesItem(QStringLiteral("Out of tolerance"),
+                                                   QStringLiteral("#ef4444"),
+                                                   outlierPoints,
+                                                   false,
+                                                   true,
+                                                   0.0,
+                                                   5,
+                                                   true));
+    }
+
+    return seriesItems;
+}
 } // namespace
 
 AppController::AppController(QObject *parent)
@@ -186,6 +418,36 @@ QVariantList AppController::pointSeries() const
     }
 
     return items;
+}
+
+QVariantList AppController::segmentedPointSeries() const
+{
+    return m_segmentedPointSeries;
+}
+
+QVariantList AppController::fittedLineSeries() const
+{
+    return m_fittedLineSeries;
+}
+
+QVariantList AppController::globalResidualSeries() const
+{
+    return m_globalResidualSeries;
+}
+
+QVariantList AppController::segmentResidualSeries() const
+{
+    return m_segmentResidualSeries;
+}
+
+QVariantList AppController::segmentErrorOutlierSeries() const
+{
+    return m_segmentErrorOutlierSeries;
+}
+
+double AppController::reviewTolerance() const
+{
+    return m_reviewTolerance;
 }
 
 QString AppController::summaryText() const
@@ -363,6 +625,8 @@ void AppController::runAnalysis()
         const SegmentResult &segment = result.segments.at(index);
         QVariantMap item;
         item.insert(QStringLiteral("title"), QStringLiteral("Segment %1").arg(index + 1));
+        item.insert(QStringLiteral("startIndex"), segment.startIndex);
+        item.insert(QStringLiteral("endIndex"), segment.endIndex);
         item.insert(QStringLiteral("range"),
                     QStringLiteral("%1 -> %2")
                         .arg(formatNumber(segment.xStart, 4), formatNumber(segment.xEnd, 4)));
@@ -379,6 +643,16 @@ void AppController::runAnalysis()
     }
 
     m_segmentResults = segmentItems;
+    const double maxAbsY = maxAbsYValue(m_pointModel.points());
+    m_reviewTolerance = 0.2 * maxAbsY / 100.0;
+    m_segmentedPointSeries = buildSegmentedPointSeries(m_pointModel.points(), m_segmentResults);
+    m_fittedLineSeries = buildFittedLineSeries(m_segmentResults);
+    m_globalResidualSeries = buildGlobalResidualSeries(m_pointModel.points());
+    m_segmentErrorOutlierSeries.clear();
+    m_segmentResidualSeries = buildSegmentResidualSeries(m_pointModel.points(),
+                                                         m_segmentResults,
+                                                         &m_segmentErrorOutlierSeries,
+                                                         maxAbsY);
     m_plcCode = SegmentFitService::buildPlcCode(result.segments);
     m_summaryText = QStringLiteral("%1 points processed, %2 segments, abs. tolerance %3")
                         .arg(pointCount())
@@ -425,8 +699,14 @@ void AppController::invalidateResults()
     const bool hadResults = !m_segmentResults.isEmpty() || !m_plcCode.isEmpty() || !m_summaryText.isEmpty();
 
     m_segmentResults.clear();
+    m_segmentedPointSeries.clear();
+    m_fittedLineSeries.clear();
+    m_globalResidualSeries.clear();
+    m_segmentResidualSeries.clear();
+    m_segmentErrorOutlierSeries.clear();
     m_plcCode.clear();
     m_summaryText.clear();
+    m_reviewTolerance = 0.0;
 
     if (hadResults) {
         emit resultsChanged();
